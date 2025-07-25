@@ -137,21 +137,21 @@ export default function SettingsPage() {
             <Form {...profileForm}>
               <Tabs defaultValue="profile" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="profile" className="flex items-center space-x-2">
+                  <TabsTrigger value="profile" className="flex items-center justify-center space-x-2">
                     <User className="w-4 h-4" />
-                    <span>Profile</span>
+                    <span className="hidden sm:inline">Profile</span>
                   </TabsTrigger>
-                  <TabsTrigger value="timer" className="flex items-center space-x-2">
+                  <TabsTrigger value="timer" className="flex items-center justify-center space-x-2">
                     <Timer className="w-4 h-4" />
-                    <span>Timer</span>
+                    <span className="hidden sm:inline">Timer</span>
                   </TabsTrigger>
-                  <TabsTrigger value="appearance" className="flex items-center space-x-2">
+                  <TabsTrigger value="appearance" className="flex items-center justify-center space-x-2">
                     <Palette className="w-4 h-4" />
-                    <span>Appearance</span>
+                    <span className="hidden sm:inline">Appearance</span>
                   </TabsTrigger>
-                  <TabsTrigger value="notifications" className="flex items-center space-x-2">
+                  <TabsTrigger value="notifications" className="flex items-center justify-center space-x-2">
                     <Bell className="w-4 h-4" />
-                    <span>Notifications</span>
+                    <span className="hidden sm:inline">Notifications</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -354,8 +354,8 @@ export default function SettingsPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="light">Light</SelectItem>
                                 <SelectItem value="dark">Dark</SelectItem>
+                                <SelectItem value="light">Light</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormDescription>Choose your preferred color theme</FormDescription>
