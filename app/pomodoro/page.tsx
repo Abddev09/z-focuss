@@ -136,47 +136,47 @@ export default function PomodoroPage() {
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           <div className="max-w-4xl mx-auto">
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold mb-2">Pomodoro Timer</h1>
-              <p className="text-muted-foreground">Stay focused and productive with the Pomodoro Technique</p>
+            <div className="text-center mb-6 md:mb-8">
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">Pomodoro Timer</h1>
+              <p className="text-sm md:text-base text-muted-foreground">Stay focused and productive with the Pomodoro Technique</p>
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
               {/* Timer Card */}
               <div className="lg:col-span-2">
                 <Card className="border-0 shadow-xl overflow-hidden">
-                  <div className={`${getTimerModeColor()} p-8 text-white`}>
+                  <div className={`${getTimerModeColor()} p-6 md:p-8 text-white`}>
                     <div className="text-center">
-                      <Badge variant="secondary" className="mb-4 text-sm">
+                      <Badge variant="secondary" className="mb-4 text-xs md:text-sm px-3 py-1">
                         {getTimerModeText()}
                       </Badge>
                       <div className="mb-6">
                         <div
-                          className={`text-6xl md:text-8xl font-mono font-bold mb-4 ${
+                          className={`text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-mono font-bold mb-4 ${
                             timerState.isRunning ? "timer-pulse" : ""
-                          }`}
+                          } leading-none`}
                         >
                           {formatTime(timerState.timeLeft)}
                         </div>
                         <Progress
                           value={((timerState.totalTime - timerState.timeLeft) / timerState.totalTime) * 100}
-                          className="h-3 bg-white/20"
+                          className="h-2 md:h-3 bg-white/20"
                         />
                       </div>
 
                       {/* Timer Controls */}
-                      <div className="flex justify-center space-x-4">
+                      <div className="flex flex-wrap justify-center gap-3 md:gap-4">
                         {!timerState.isRunning ? (
                           <Button
                             onClick={handleStart}
                             size="lg"
                             variant="secondary"
-                            className="flex items-center space-x-2"
+                            className="flex items-center space-x-2 px-6 py-3 text-base"
                           >
-                            <Play className="w-5 h-5" />
+                            <Play className="w-4 h-4 md:w-5 md:h-5" />
                             <span>Start</span>
                           </Button>
                         ) : (
@@ -184,9 +184,9 @@ export default function PomodoroPage() {
                             onClick={handlePause}
                             size="lg"
                             variant="secondary"
-                            className="flex items-center space-x-2"
+                            className="flex items-center space-x-2 px-6 py-3 text-base"
                           >
-                            <Pause className="w-5 h-5" />
+                            <Pause className="w-4 h-4 md:w-5 md:h-5" />
                             <span>Pause</span>
                           </Button>
                         )}
@@ -194,19 +194,19 @@ export default function PomodoroPage() {
                           onClick={handleReset}
                           size="lg"
                           variant="outline"
-                          className="flex items-center space-x-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                          className="flex items-center space-x-2 bg-white/10 border-white/20 text-white hover:bg-white/20 px-4 py-3 text-base"
                         >
-                          <RotateCcw className="w-5 h-5" />
-                          <span>Reset</span>
+                          <RotateCcw className="w-4 h-4 md:w-5 md:h-5" />
+                          <span className="hidden sm:inline">Reset</span>
                         </Button>
                         <Button
                           onClick={handleSkip}
                           size="lg"
                           variant="outline"
-                          className="flex items-center space-x-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                          className="flex items-center space-x-2 bg-white/10 border-white/20 text-white hover:bg-white/20 px-4 py-3 text-base"
                         >
-                          <SkipForward className="w-5 h-5" />
-                          <span>Skip</span>
+                          <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
+                          <span className="hidden sm:inline">Skip</span>
                         </Button>
                       </div>
                     </div>
@@ -215,12 +215,12 @@ export default function PomodoroPage() {
               </div>
 
               {/* Side Panel */}
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 {/* Task Selection */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <CheckSquare className="w-5 h-5" />
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center space-x-2 text-base md:text-lg">
+                      <CheckSquare className="w-4 h-4 md:w-5 md:h-5" />
                       <span>Focus Task</span>
                     </CardTitle>
                   </CardHeader>
@@ -229,7 +229,7 @@ export default function PomodoroPage() {
                       <div className="animate-pulse h-10 bg-muted rounded"></div>
                     ) : (
                       <Select value={selectedTaskId} onValueChange={setSelectedTaskId}>
-                        <SelectTrigger>
+                        <SelectTrigger className="text-sm md:text-base h-10 md:h-11">
                           <SelectValue placeholder="Select a task to focus on" />
                         </SelectTrigger>
                         <SelectContent>
@@ -246,7 +246,7 @@ export default function PomodoroPage() {
                                         : "bg-green-500"
                                   }`}
                                 />
-                                <span className="truncate">{task.title}</span>
+                                <span className="truncate text-sm">{task.title}</span>
                               </div>
                             </SelectItem>
                           ))}
@@ -258,16 +258,16 @@ export default function PomodoroPage() {
 
                 {/* Notification Settings */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Settings className="w-5 h-5" />
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center space-x-2 text-base md:text-lg">
+                      <Settings className="w-4 h-4 md:w-5 md:h-5" />
                       <span>Notification</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Notification Sound</label>
-                      <p className="text-sm text-muted-foreground">
+                  <CardContent className="space-y-3 md:space-y-4">
+                    <div className="space-y-1 md:space-y-2">
+                      <label className="text-xs md:text-sm font-medium">Notification Sound</label>
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {notificationSound === "/sounds/notification.mp3"
                           ? "Default notification sound"
                           : "Custom sound from media library"}
@@ -278,11 +278,11 @@ export default function PomodoroPage() {
                         variant="outline"
                         size="sm"
                         onClick={testNotificationSound}
-                        className="flex-1 bg-transparent"
+                        className="flex-1 bg-transparent text-xs md:text-sm py-2"
                       >
                         Test Sound
                       </Button>
-                      <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent">
+                      <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent text-xs md:text-sm py-2">
                         <a href="/media">Change Sound</a>
                       </Button>
                     </div>
@@ -291,30 +291,30 @@ export default function PomodoroPage() {
 
                 {/* Timer Settings */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Timer className="w-5 h-5" />
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center space-x-2 text-base md:text-lg">
+                      <Timer className="w-4 h-4 md:w-5 md:h-5" />
                       <span>Timer Settings</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Work Duration</label>
-                      <p className="text-sm text-muted-foreground">{Math.floor(settings.workDuration / 60)} minutes</p>
+                  <CardContent className="space-y-3 md:space-y-4">
+                    <div className="space-y-1 md:space-y-2">
+                      <label className="text-xs md:text-sm font-medium">Work Duration</label>
+                      <p className="text-xs md:text-sm text-muted-foreground">{Math.floor(settings.workDuration / 60)} minutes</p>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Short Break</label>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="space-y-1 md:space-y-2">
+                      <label className="text-xs md:text-sm font-medium">Short Break</label>
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {Math.floor(settings.shortBreakDuration / 60)} minutes
                       </p>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Long Break</label>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="space-y-1 md:space-y-2">
+                      <label className="text-xs md:text-sm font-medium">Long Break</label>
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {Math.floor(settings.longBreakDuration / 60)} minutes
                       </p>
                     </div>
-                    <Button variant="outline" className="w-full bg-transparent" asChild>
+                    <Button variant="outline" className="w-full bg-transparent text-xs md:text-sm py-2" asChild>
                       <a href="/settings">Customize Settings</a>
                     </Button>
                   </CardContent>
@@ -322,29 +322,29 @@ export default function PomodoroPage() {
 
                 {/* Session Info */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Timer className="w-5 h-5" />
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center space-x-2 text-base md:text-lg">
+                      <Timer className="w-4 h-4 md:w-5 md:h-5" />
                       <span>Session Info</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Mode</span>
-                        <Badge variant={timerState.mode === "work" ? "default" : "secondary"}>
+                    <div className="space-y-2 md:space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs md:text-sm text-muted-foreground">Mode</span>
+                        <Badge variant={timerState.mode === "work" ? "default" : "secondary"} className="text-xs">
                           {getTimerModeText()}
                         </Badge>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Status</span>
-                        <Badge variant={timerState.isRunning ? "default" : "outline"}>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs md:text-sm text-muted-foreground">Status</span>
+                        <Badge variant={timerState.isRunning ? "default" : "outline"} className="text-xs">
                           {timerState.isRunning ? "Running" : "Paused"}
                         </Badge>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Progress</span>
-                        <span className="text-sm font-medium">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs md:text-sm text-muted-foreground">Progress</span>
+                        <span className="text-xs md:text-sm font-medium">
                           {Math.round(((timerState.totalTime - timerState.timeLeft) / timerState.totalTime) * 100)}%
                         </span>
                       </div>
