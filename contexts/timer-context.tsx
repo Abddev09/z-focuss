@@ -1,16 +1,9 @@
 "use client"
+
 import type React from "react"
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useRef, // Import useRef
-} from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
 import type { TimerState, AppSettings } from "@/types"
 import apiClient from "@/lib/api"
-// useToast importi olib tashlandi, chunki tostlar endi PomodoroPage tomonidan boshqariladi
 
 interface TimerContextType {
   timerState: TimerState
@@ -20,6 +13,8 @@ interface TimerContextType {
   resetTimer: () => void
   skipTimer: () => void
   updateSettings: (newSettings: Partial<AppSettings>) => void
+  stopAllAudio: () => void // Yangi funksiya qo'shildi
+  playTestSound: () => void // Test ovozi uchun yangi funksiya
 }
 
 const defaultSettings: AppSettings = {
@@ -45,13 +40,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   })
   const [settings, setSettings] = useState<AppSettings>(defaultSettings)
   const [sessionCount, setSessionCount] = useState(0)
-  // useToast hooki bu yerdan olib tashlandi
 
-  // Taymer tugashi ovozi uchun audio ref, kontekst ichida boshqariladi
+  // Barcha audio elementlarini boshqarish uchun ref
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Hozirda ijro etilayotgan har qanday audioni to'xtatish funksiyasi
-  const stopCurrentAudio = useCallback(() => {
+  // Barcha audioni to'xtatish funksiyasi
+  const stopAllAudio = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
@@ -59,28 +53,30 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Bildirishnoma ovozini ijro etish funksiyasi, agar mavjud bo'lsa, localStorage'dan maxsus ovozni ishlatadi
+  // Bildirishnoma ovozini ijro etish funksiyasi
   const playNotificationSound = useCallback(() => {
     if (typeof window === "undefined" || !settings.soundEnabled) {
-      return // Brauzerda bo'lmasa yoki ovoz o'chirilgan bo'lsa, ovoz ijro etilmaydi
+      return
     }
 
-    stopCurrentAudio() // Yangi ovozni boshlashdan oldin ijro etilayotgan har qanday ovozni to'xtating
+    stopAllAudio() // Avval barcha ovozlarni to'xtatish
 
     const savedSoundUrl = localStorage.getItem("selectedSoundUrl")
     const soundToPlay = savedSoundUrl || "/sounds/notification.mp3"
 
     const audio = new Audio(soundToPlay)
-    audio.volume = 0.7 // Standart ovoz balandligini o'rnating
-    audioRef.current = audio // Joriy audio misoliga havolani saqlang
+    audio.volume = 0.7
+    audioRef.current = audio
 
     audio.addEventListener("ended", () => {
-      audioRef.current = null // Audio tugagach refni tozalang
+      audioRef.current = null
     })
+
     audio.addEventListener("error", (e) => {
       console.error("Audio ijro etishda xato:", soundToPlay, e)
       audioRef.current = null
-      // Agar maxsus ovoz yuklanmasa yoki ijro etilmasa, standart ovozga qayting
+
+      // Standart ovozga qaytish
       if (soundToPlay !== "/sounds/notification.mp3") {
         const fallbackAudio = new Audio("/sounds/notification.mp3")
         fallbackAudio.volume = 0.7
@@ -91,7 +87,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
     audio.play().catch((err) => {
       console.error("Audio ijro etish muvaffaqiyatsiz tugadi:", soundToPlay, err)
-      // Agar ijro etish muvaffaqiyatsiz tugasa (masalan, foydalanuvchi imo-ishorasi talab qilinsa), standart ovozga qayting
+
       if (soundToPlay !== "/sounds/notification.mp3") {
         const fallbackAudio = new Audio("/sounds/notification.mp3")
         fallbackAudio.volume = 0.7
@@ -99,9 +95,53 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         fallbackAudio.play().catch(console.error)
       }
     })
-  }, [settings.soundEnabled, stopCurrentAudio]) // useCallback uchun bog'liqliklar
+  }, [settings.soundEnabled, stopAllAudio])
 
-  // Taymer nolga yetganda chaqiriladigan callback
+  // Test ovozi uchun funksiya
+  const playTestSound = useCallback(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    stopAllAudio() // Avval barcha ovozlarni to'xtatish
+
+    const savedSoundUrl = localStorage.getItem("selectedSoundUrl")
+    const soundToPlay = savedSoundUrl || "/sounds/notification.mp3"
+
+    const audio = new Audio(soundToPlay)
+    audio.volume = 0.7
+    audioRef.current = audio
+
+    audio.addEventListener("ended", () => {
+      audioRef.current = null
+    })
+
+    audio.addEventListener("error", (e) => {
+      console.error("Test ovozi ijro etishda xato:", soundToPlay, e)
+      audioRef.current = null
+
+      // Standart ovozga qaytish
+      if (soundToPlay !== "/sounds/notification.mp3") {
+        const fallbackAudio = new Audio("/sounds/notification.mp3")
+        fallbackAudio.volume = 0.7
+        audioRef.current = fallbackAudio
+        fallbackAudio.play().catch(console.error)
+      }
+    })
+
+    audio.play().catch((err) => {
+      console.error("Test ovozi ijro etish muvaffaqiyatsiz tugadi:", soundToPlay, err)
+
+      if (soundToPlay !== "/sounds/notification.mp3") {
+        const fallbackAudio = new Audio("/sounds/notification.mp3")
+        fallbackAudio.volume = 0.7
+        audioRef.current = fallbackAudio
+        fallbackAudio.play().catch(console.error)
+      }
+    })
+  }, [stopAllAudio])
+
+  // Taymer tugashi callbacki
   const handleTimerComplete = useCallback(async () => {
     if (timerState.mode === "work") {
       if (timerState.currentSession) {
@@ -111,8 +151,10 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           console.error("Sessiyani yakunlashda xato:", error)
         }
       }
+
       const newSessionCount = sessionCount + 1
       setSessionCount(newSessionCount)
+
       const isLongBreak = newSessionCount % settings.sessionsUntilLongBreak === 0
       const breakDuration = isLongBreak ? settings.longBreakDuration : settings.shortBreakDuration
       const breakMode = isLongBreak ? "longBreak" : "break"
@@ -124,7 +166,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         mode: breakMode,
       })
 
-      // Ovoz bu yerda ijro etiladi
+      // Ovoz ijro etish
       if (settings.soundEnabled) {
         playNotificationSound()
       }
@@ -137,16 +179,17 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         mode: "work",
       })
 
-      // Ovoz bu yerda ijro etiladi
+      // Ovoz ijro etish
       if (settings.soundEnabled) {
         playNotificationSound()
       }
     }
-  }, [timerState, sessionCount, settings, playNotificationSound]) // playNotificationSound bog'liqliklarga qo'shildi
+  }, [timerState, sessionCount, settings, playNotificationSound])
 
   // Asosiy taymer interval effekti
   useEffect(() => {
     let interval: NodeJS.Timeout
+
     if (timerState.isRunning && timerState.timeLeft > 0) {
       interval = setInterval(() => {
         setTimerState((prev) => ({
@@ -157,22 +200,9 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     } else if (timerState.timeLeft === 0) {
       handleTimerComplete()
     }
-    return () => clearInterval(interval)
-  }, [timerState.isRunning, timerState.timeLeft]) // handleTimerComplete bog'liqliklarga qo'shildi [^2]
 
-  // Taymer rejimi matni uchun yordamchi funksiya (agar boshqa joyda kerak bo'lsa, utils'ga ko'chirilishi mumkin)
-  const getTimerModeText = (mode: TimerState["mode"]) => {
-    switch (mode) {
-      case "work":
-        return "Focus Time"
-      case "break":
-        return "Short Break"
-      case "longBreak":
-        return "Long Break"
-      default:
-        return "Focus Time"
-    }
-  }
+    return () => clearInterval(interval)
+  }, [timerState.isRunning, timerState.timeLeft, handleTimerComplete])
 
   const startTimer = async (taskId?: string) => {
     if (timerState.mode === "work" && !timerState.currentSession) {
@@ -181,9 +211,11 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         const payload: { duration: number; taskId?: string } = {
           duration: durationInMinutes,
         }
+
         if (taskId && taskId.trim() !== "" && taskId !== "none") {
           payload.taskId = taskId
         }
+
         const session = await apiClient.startPomodoroSession(payload)
         setTimerState((prev) => ({
           ...prev,
@@ -192,11 +224,6 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         }))
       } catch (error: any) {
         console.error("Sessiyani boshlashda xato:", error?.response?.data || error)
-        // API chaqiruvlariga bevosita bog'liq bo'lgan xatolar uchun tostlar bu yerda qoladi
-        // va umumiy taymer tugashi bildirishnomasi emas.
-        // Toast komponenti PomodoroPage'da import qilingan, shuning uchun uni bu yerda bevosita ishlata olmaymiz.
-        // Agar API xatolari uchun tostlar kerak bo'lsa, PomodoroPage'dan tost funksiyasini o'tkazishingiz
-        // yoki useToast'ni bu yerda qayta import qilishingiz kerak bo'ladi. Hozircha, console.error'ni qoldiraman.
       }
     } else {
       setTimerState((prev) => ({
@@ -220,6 +247,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         : timerState.mode === "break"
           ? settings.shortBreakDuration
           : settings.longBreakDuration
+
     setTimerState({
       isRunning: false,
       timeLeft: duration,
@@ -237,6 +265,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
 
   const updateSettings = (newSettings: Partial<AppSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }))
+
     if (!timerState.isRunning) {
       const duration =
         timerState.mode === "work"
@@ -244,6 +273,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
           : timerState.mode === "break"
             ? newSettings.shortBreakDuration || settings.shortBreakDuration
             : newSettings.longBreakDuration || settings.longBreakDuration
+
       setTimerState((prev) => ({
         ...prev,
         timeLeft: duration,
@@ -252,12 +282,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Komponent (TimerProvider) o'chirilganda audioni to'xtating
+  // Komponent o'chirilganda audioni to'xtatish
   useEffect(() => {
     return () => {
-      stopCurrentAudio()
+      stopAllAudio()
     }
-  }, [stopCurrentAudio])
+  }, [stopAllAudio])
 
   return (
     <TimerContext.Provider
@@ -269,6 +299,8 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         resetTimer,
         skipTimer,
         updateSettings,
+        stopAllAudio,
+        playTestSound,
       }}
     >
       {children}
