@@ -10,23 +10,32 @@ import { Play, Pause, RotateCcw, SkipForward, Settings, Timer, CheckSquare } fro
 import { ProtectedRoute } from "@/components/layout/protected-route"
 import { Navbar } from "@/components/layout/navbar"
 import { useTimer } from "@/contexts/timer-context"
-import type { Task as BackendTask } from "@/types" // types.ts dan Task ni BackendTask deb import qilish
+import type { Task as BackendTask } from "@/types"
 import apiClient from "@/lib/api"
 import { formatTime } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
 
 // Frontendda ishlatiladigan Task interfeysi
-// BackendTask'dagi 'done' ni olib tashlab, 'completed' ni qo'shamiz
 interface Task extends Omit<BackendTask, "done"> {
   completed: boolean
 }
 
 export default function PomodoroPage() {
-  const [tasks, setTasks] = useState<Task[]>([]) // Yangi Task interfeysidan foydalanamiz
+  const [tasks, setTasks] = useState<Task[]>([])
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>(undefined)
   const [loading, setLoading] = useState(true)
-  const [notificationSound, setNotificationSound] = useState<string>("/sounds/notification.mp3") // Standart zaxira
-  const { timerState, settings, startTimer, pauseTimer, resetTimer, skipTimer } = useTimer()
+  const [notificationSound, setNotificationSound] = useState<string>("/sounds/notification.mp3")
+
+  const {
+    timerState,
+    settings,
+    startTimer,
+    pauseTimer,
+    resetTimer,
+    skipTimer,
+    playTestSound, // Timer kontekstidan test ovozi funksiyasini olish
+  } = useTimer()
+
   const { toast } = useToast()
 
   useEffect(() => {
@@ -34,7 +43,7 @@ export default function PomodoroPage() {
     loadNotificationPreferences()
   }, [])
 
-  // Taymer tugashi uchun tostni ko'rsatish (ovoz endi timer-context.tsx tomonidan boshqariladi)
+  // Taymer tugashi uchun tostni ko'rsatish
   useEffect(() => {
     if (timerState.timeLeft === 0 && timerState.totalTime > 0) {
       const modeText = getTimerModeText()
@@ -47,13 +56,12 @@ export default function PomodoroPage() {
 
   const loadTasks = async () => {
     try {
-      const rawTasks = await apiClient.getTasks() // rawTasks endi BackendTask[] turida (ya'ni 'done' xususiyatiga ega)
-      // Backenddan kelgan 'done' ni frontenddagi 'completed' ga xaritalash
+      const rawTasks = await apiClient.getTasks()
       const mappedTasks: Task[] = rawTasks.map((task) => ({
         ...task,
         completed: task.done,
       }))
-      setTasks(mappedTasks.filter((task) => !task.completed)) // Faqat bajarilmagan vazifalarni ko'rsatish uchun filterlash
+      setTasks(mappedTasks.filter((task) => !task.completed))
     } catch (error) {
       console.error("Vazifalarni yuklashda xato:", error)
       toast({
@@ -76,17 +84,9 @@ export default function PomodoroPage() {
     }
   }
 
+  // Test ovozi uchun timer kontekstidagi funksiyani ishlatish
   const testNotificationSound = () => {
-    const audio = new Audio(notificationSound)
-    audio.volume = 0.7
-    audio.play().catch((err) => {
-      console.error("Test ovozi ijro etish muvaffaqiyatsiz tugadi:", notificationSound, err)
-      if (notificationSound !== "/sounds/notification.mp3") {
-        const fallbackAudio = new Audio("/sounds/notification.mp3")
-        fallbackAudio.volume = 0.7
-        fallbackAudio.play().catch(console.error)
-      }
-    })
+    playTestSound()
   }
 
   const handleStart = () => {
@@ -141,7 +141,9 @@ export default function PomodoroPage() {
             {/* Header */}
             <div className="text-center mb-6 md:mb-8">
               <h1 className="text-2xl md:text-3xl font-bold mb-2">Pomodoro Timer</h1>
-              <p className="text-sm md:text-base text-muted-foreground">Stay focused and productive with the Pomodoro Technique</p>
+              <p className="text-sm md:text-base text-muted-foreground">
+                Stay focused and productive with the Pomodoro Technique
+              </p>
             </div>
 
             <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
@@ -153,6 +155,7 @@ export default function PomodoroPage() {
                       <Badge variant="secondary" className="mb-4 text-xs md:text-sm px-3 py-1">
                         {getTimerModeText()}
                       </Badge>
+
                       <div className="mb-6">
                         <div
                           className={`text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-mono font-bold mb-4 ${
@@ -190,6 +193,7 @@ export default function PomodoroPage() {
                             <span>Pause</span>
                           </Button>
                         )}
+
                         <Button
                           onClick={handleReset}
                           size="lg"
@@ -199,6 +203,7 @@ export default function PomodoroPage() {
                           <RotateCcw className="w-4 h-4 md:w-5 md:h-5" />
                           <span className="hidden sm:inline">Reset</span>
                         </Button>
+
                         <Button
                           onClick={handleSkip}
                           size="lg"
@@ -282,7 +287,12 @@ export default function PomodoroPage() {
                       >
                         Test Sound
                       </Button>
-                      <Button variant="outline" size="sm" asChild className="flex-1 bg-transparent text-xs md:text-sm py-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="flex-1 bg-transparent text-xs md:text-sm py-2"
+                      >
                         <a href="/media">Change Sound</a>
                       </Button>
                     </div>
@@ -300,7 +310,9 @@ export default function PomodoroPage() {
                   <CardContent className="space-y-3 md:space-y-4">
                     <div className="space-y-1 md:space-y-2">
                       <label className="text-xs md:text-sm font-medium">Work Duration</label>
-                      <p className="text-xs md:text-sm text-muted-foreground">{Math.floor(settings.workDuration / 60)} minutes</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">
+                        {Math.floor(settings.workDuration / 60)} minutes
+                      </p>
                     </div>
                     <div className="space-y-1 md:space-y-2">
                       <label className="text-xs md:text-sm font-medium">Short Break</label>
